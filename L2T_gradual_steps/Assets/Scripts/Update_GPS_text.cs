@@ -11,6 +11,7 @@ public class Update_GPS_text : MonoBehaviour
     public Text horizontal_accuracy_text;
     public Text vertical_accuracy_text;
 
+
     void Update()
     {
         latitude_text.text = "Lat= " + GPS.Instance.latitude.ToString();
@@ -19,4 +20,7 @@ public class Update_GPS_text : MonoBehaviour
         horizontal_accuracy_text.text = "Horizon acc= " +GPS.Instance.horizontal_accuracy.ToString();
         vertical_accuracy_text.text = "Vertical acc= " + GPS.Instance.vertical_accuracy.ToString();
     }
+
+
+
 }

@@ -19,6 +19,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     private float remote_horizontal_acc;
     private float remote_vertical_acc;
 
+
+
     [Space(5)]  //space between vars in the editor of Unity
     public Text my_count_text;
     [Space(5)]
@@ -33,6 +35,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     public Text remote_alt_text;
     public Text remote_horizontal_acc_text;
     public Text remote_vertical_acc_text;
+    //gps calculations text
+    public Text distance_to_target_text;
 
     //debug 
     enum FindDebug { None, All, GPS, Photon };  //declare new type
@@ -85,6 +89,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
         SetRemoteHorizonAccText();
         SetRemoteVerticalAccText();
+
+        setDistanceText();
     }
 
     public void OnAddToMyCount()
@@ -286,5 +292,73 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             return;
         }
         remote_vertical_acc = float.Parse(VertAccuracy, CultureInfo.InvariantCulture.NumberFormat);
+    }
+
+
+    //find distance
+
+    float DegToRad(float deg)
+    {
+        float temp;
+        temp = (deg * Mathf.PI) / 180.0f;
+        temp = Mathf.Tan(temp);
+        return temp;
+    }
+
+    float Distance_x(float lon_a, float lon_b, float lat_a, float lat_b)
+    {
+        float temp;
+        float c;
+        temp = (lat_b - lat_a);
+        c = Mathf.Abs(temp * Mathf.Cos((lat_a + lat_b)) / 2);
+        return c;
+    }
+
+    private float Distance_y(float lat_a, float lat_b)
+    {
+        float c;
+        c = (lat_b - lat_a);
+        return c;
+    }
+
+    float Final_distance(float x, float y)
+    {
+        float c;
+        c = Mathf.Abs(Mathf.Sqrt(Mathf.Pow(x, 2f) + Mathf.Pow(y, 2f))) * 6371;
+        return c;
+    }
+
+    //*******************************
+    //This is the function to call to calculate the distance between two points in meters
+
+    private float Calculate_Distance_Meters(float long_a, float lat_a, float long_b, float lat_b)
+    {
+        if(FindDebugMode == FindDebug.All || FindDebugMode == FindDebug.GPS)
+        {
+            //todo - the target sees strange values because it doesnt receive any data so it shouldnt display any distance
+            Debug.Log("Calculate_Distance_Meters: long_a= " + long_a.ToString());
+            Debug.Log("Calculate_Distance_Meters: lat_a= " + lat_a.ToString());
+            Debug.Log("Calculate_Distance_Meters: long_b= " + long_b.ToString());
+            Debug.Log("Calculate_Distance_Meters: lat_b= " + lat_b.ToString());
+        }
+
+        float a_long_r, a_lat_r, p_long_r, p_lat_r, dist_x, dist_y, total_dist;
+        a_long_r = DegToRad(long_a);
+        a_lat_r = DegToRad(lat_a);
+        p_long_r = DegToRad(long_b);
+        p_lat_r = DegToRad(lat_b);
+        dist_x = Distance_x(a_long_r, p_long_r, a_lat_r, p_lat_r);
+        dist_y = Distance_y(a_lat_r, p_lat_r);
+        total_dist = Final_distance(dist_x, dist_y) * 1000; //divide by 1000 to get meters
+
+        return total_dist;
+
+    }
+
+    private void setDistanceText()
+    {
+        float distance_to_target = Calculate_Distance_Meters(GPS.Instance.longitude, GPS.Instance.latitude, remote_longi, remote_lat);
+        // float distance_to_target = Calculate_Distance_Meters(35.044251f, 32.772542f, 35.044542f, 32.772231f);  //worked! it is 44 meters
+        distance_to_target_text.text = "Distance to target: " + distance_to_target.ToString();
     }
 }
