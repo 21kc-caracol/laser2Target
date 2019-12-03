@@ -13,8 +13,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     private int remote_count;
 
     //gps data to pass through the Network 
-    private float remote_lat;
-    private float remote_longi;
+    public static float remote_lat;  //used by rotation script (compassRotation)
+    public static float remote_longi;  //used by rotation script (compassRotation)
     private float remote_alt;
     private float remote_horizontal_acc;
     private float remote_vertical_acc;
