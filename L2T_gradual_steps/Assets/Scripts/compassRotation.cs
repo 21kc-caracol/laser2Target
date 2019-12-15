@@ -12,18 +12,19 @@ public class compassRotation : MonoBehaviour
     Quaternion attitude; //will store the attitude from our gyroscope (related to phones heading)
 
     //debug
-    private float bearing_z;
+    private float bearing_z; //rotate counter-clock. 0 degrees is TrueNorth
 
-    //Debug arrow- understand if to have magnetic or true heading
-    private GameObject compass_magnetic;
 
-    public Text headingAcc_text;
+    //debug 
+    enum CompassDebug { None, All };  //declare new type
+    CompassDebug CompassDebugMode;  // declare a var from enum GpsDebug type
 
     // Start is called before the first frame update
     void Start()
     {
+        CompassDebugMode = CompassDebug.None;
+
         compass = GameObject.Find("navArrow"); //store game object        
-        compass_magnetic = GameObject.Find("navArrow_magnetic");
 
         //enable inner compass for heading accuracies sampling
         Input.compass.enabled = true;
@@ -32,39 +33,24 @@ public class compassRotation : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //bearing = angleFromCoordinate(32.7721325f, 35.0441824f, 32.7725536f, 35.043838f); // faith garden parallel road
-        //Debug.Log("bearing = " + bearing.ToString());
-        //bearing = angleFromCoordinate(GPS.Instance.latitude, GPS.Instance.longitude, Find_script.remote_lat, Find_script.remote_longi);
-        //bearingText.text = "GPS bearing= " + bearing.ToString(); //debug
-        //attitude = gyro.attitude;
-        //attitude[0] = 0;
-        //attitude[1] = 0;
-        //attitude[3] *= -1;  // tutorials just multiply like this
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         //debugg
         //take only z axis bearing
         //bearing_z = angleFromCoordinate(32.7721325f, 35.0441824f, 32.7725536f, 35.043838f); // faith garden parallel road
+
         bearing_z = angleFromCoordinate(GPS.Instance.latitude, GPS.Instance.longitude, Find_script.remote_lat, Find_script.remote_longi); // faith garden parallel road
-        Debug.Log("bearing_z = " + bearing_z.ToString());
 
-
-        //take only z rotation
-        Debug.Log("Gyro_rot (x= " + gyro.attitude.eulerAngles.x.ToString()+",y= "+ gyro.attitude.eulerAngles.y.ToString()+",z= "+ gyro.attitude.eulerAngles.z.ToString());
-        Debug.Log("True north= " + Input.compass.trueHeading.ToString());
-
-        Debug.Log("comp rot Z = " + compass.transform.rotation.eulerAngles.z.ToString());
+        if (CompassDebugMode == CompassDebug.All)
+        {
+            //take only z rotation
+            Debug.Log("Gyro_rot (x= " + gyro.attitude.eulerAngles.x.ToString() + ",y= " + gyro.attitude.eulerAngles.y.ToString() + ",z= " + gyro.attitude.eulerAngles.z.ToString());
+            Debug.Log("True north= " + Input.compass.trueHeading.ToString());
+            Debug.Log("comp rot Z = " + compass.transform.rotation.eulerAngles.z.ToString());
+            Debug.Log("bearing_z = " + bearing_z.ToString());
+            Debug.Log("Heading acc= " + Input.compass.headingAccuracy.ToString());
+        }
 
         compass.transform.rotation = Quaternion.Slerp(compass.transform.rotation, Quaternion.Euler(0f,0f, bearing_z+ Input.compass.trueHeading), 1f);
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-        compass_magnetic.transform.rotation = attitude;
-        //version with magnetic heading
-        compass_magnetic.transform.rotation *= Quaternion.Slerp(compass_magnetic.transform.rotation, Quaternion.Euler(0, 0, Input.compass.magneticHeading + bearing), 1f);
-        //Debug.Log("rot magnet Head = " + compass_magnetic.transform.rotation.ToString());
-
-        headingAcc_text.text = "Heading acc= " + Input.compass.headingAccuracy.ToString();
     }
 
     //calculate bearing angle- north is 0 degrees
