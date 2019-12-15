@@ -30,7 +30,7 @@ public class gyro : MonoBehaviour
             gyr = Input.gyro;
             gyr.enabled = true;
             Debug.Log("Input.gyro.updateInterval= "+ Input.gyro.updateInterval.ToString());
-            Input.gyro.updateInterval = 0.01f;
+            //Input.gyro.updateInterval = 0.01f;  use default updateInterval
             return true;
         }
 

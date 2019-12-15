@@ -29,7 +29,7 @@ public class GPS : MonoBehaviour
     private void Start()
     {
         //debug
-        debugMode = GpsDebug.All;
+        debugMode = GpsDebug.None;
 
         //initialization
         gpsUpdateRate = 0.1f;

@@ -47,7 +47,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     {
         //lev initializations
         //variables
-        FindDebugMode = FindDebug.GPS;
+        FindDebugMode = FindDebug.None; // FindDebug.GPS;
         my_count = 0;
         remote_count = 0;
 
