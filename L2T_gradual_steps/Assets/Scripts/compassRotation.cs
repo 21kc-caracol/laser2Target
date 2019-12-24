@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class compassRotation : MonoBehaviour
 {
 
-    private GameObject compass; // will be used to store a graphical arrow
+    private GameObject compass; // will be used to store a graphical arrow.
     private float bearing; // directio using only 2 GPS coordinates, regardless of phones heading
     public Text bearingText; //debug
     Quaternion attitude; //will store the attitude from our gyroscope (related to phones heading)
@@ -16,13 +16,13 @@ public class compassRotation : MonoBehaviour
 
 
     //debug 
-    enum CompassDebug { None, All };  //declare new type
+    enum CompassDebug { None, All, Find_x_rotation };  //declare new type
     CompassDebug CompassDebugMode;  // declare a var from enum GpsDebug type
 
     // Start is called before the first frame update
     void Start()
     {
-        CompassDebugMode = CompassDebug.None;
+        CompassDebugMode = CompassDebug.Find_x_rotation;
 
         compass = GameObject.Find("navArrow"); //store game object        
 
@@ -48,6 +48,15 @@ public class compassRotation : MonoBehaviour
             Debug.Log("bearing_z = " + bearing_z.ToString());
             Debug.Log("Heading acc= " + Input.compass.headingAccuracy.ToString());
         }
+
+        if (CompassDebugMode == CompassDebug.Find_x_rotation)
+        {
+            Debug.Log("Gyro_rot (x= " + gyro.attitude.eulerAngles.x.ToString() + ",y= " + gyro.attitude.eulerAngles.y.ToString() + ",z= " + gyro.attitude.eulerAngles.z.ToString());
+        }
+        //{
+        //   Debug.Log("comp rot Y = " + compass.transform.rotation.eulerAngles.y.ToString());
+        //    Debug.Log("comp rot Z = " + compass.transform.rotation.eulerAngles.z.ToString());
+        //}
 
         compass.transform.rotation = Quaternion.Slerp(compass.transform.rotation, Quaternion.Euler(0f,0f, bearing_z+ Input.compass.trueHeading), 1f);
 
