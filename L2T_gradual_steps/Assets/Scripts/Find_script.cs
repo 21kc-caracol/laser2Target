@@ -6,6 +6,8 @@ using UnityEngine.UI;  // for  gps_dummy
 using Photon.Realtime;
 using Photon.Pun;
 using System.Globalization;
+using Vuforia;
+using System;
 
 public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPunObservable
 {
@@ -27,6 +29,14 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     public Text remote_count_text;
     [Space(5)]
     public GameObject buttonAddToMyCount;
+    public GameObject buttonLoadAR;
+    public GameObject buttonLoad2D;
+    public GameObject buttonLoadDebug;
+    public GameObject background;
+    public static GameObject compass1;
+
+    public Text closeToTheTarget;
+    public Text howToHoldYourPhone;
 
     //gps data text
     [Space(15)]
@@ -41,6 +51,10 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     //debug 
     enum FindDebug { None, All, GPS, Photon };  //declare new type
     FindDebug FindDebugMode;  // declare a var from enum GpsDebug type
+
+
+    //lev get access to functions from other script 
+    public AugmentedScript ar_script;
 
     // Start is called before the first frame update
     void Start()
@@ -75,6 +89,15 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             return;
         }
 
+        buttonLoadAR.SetActive(true);
+        buttonLoadDebug.SetActive(true);
+        buttonLoad2D.SetActive(false);
+        background.SetActive(true);
+        compass1 = GameObject.Find("navArrow");
+        howToHoldYourPhone.text = "Make sure your phone is HORIZONTAL";
+        howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
+
+
     }
 
     // Update is called once per frame
@@ -91,6 +114,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         SetRemoteVerticalAccText();
 
         setDistanceText();
+        setErrorRadius();
     }
 
     public void OnAddToMyCount()
@@ -359,6 +383,100 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     {
         float distance_to_target = Calculate_Distance_Meters(GPS.Instance.longitude, GPS.Instance.latitude, remote_longi, remote_lat);
         // float distance_to_target = Calculate_Distance_Meters(35.044251f, 32.772542f, 35.044542f, 32.772231f);  //worked! it is 44 meters
-        distance_to_target_text.text = "Distance to target: " + distance_to_target.ToString();
+
+        if (ar_script.ar_mode == true)
+        {
+            //ar_script.updatedPosition.z = distance_to_target;  //update Z value for the AR script
+            //ar_script.updatedPosition.x = 0f;
+            //ar_script.updatedPosition.y = -5f;
+            ar_script.updatedPosition = new Vector3(0, -5f, distance_to_target);
+        }   
+
+        distance_to_target_text.text = "Distance to target:\n" + distance_to_target.ToString();
+        distance_to_target_text.color = new Color32(255, 227, 197, 255);
+
+        // We want it only on one phone. posible?????
+        if (PhotonNetwork.IsMasterClient == false)
+        {
+            if (distance_to_target < 10.0)
+            {
+                closeToTheTarget.text = "You are very close to your TARGET";
+                closeToTheTarget.color = Color.magenta;
+                
+            } else
+            {
+                closeToTheTarget.text = "";
+            }
+        } else
+        {
+            closeToTheTarget.text = "";
+        }
+            
+    }
+
+    private void sleepfor()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void LoadAR()
+    {
+        buttonLoadAR.SetActive(false);
+        buttonLoadDebug.SetActive(true);
+        buttonLoad2D.SetActive(true);
+        background.SetActive(false);
+        compass1.SetActive(false);
+        howToHoldYourPhone.text = "Make sure your phone is VERTICAL";
+        howToHoldYourPhone.color = new Color32(245,109, 14, 255);
+        //VuforiaRuntime.Instance.InitVuforia(); // This is how you turn vuforia on!
+        closeToTheTarget.text = "";
+
+        ar_script.enableAR(); //lev enabling ar mode
+    }
+
+    public void Load2D()
+    {
+        buttonLoadAR.SetActive(true);
+        buttonLoadDebug.SetActive(true);
+        buttonLoad2D.SetActive(false);
+        //compass1 = GameObject.Find("navArrow");
+        compass1.SetActive(true);
+        background.SetActive(true);
+        howToHoldYourPhone.text = "Make sure your phone is HORIZONTAL";
+        howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
+
+        ar_script.disableAR();  //lev disabling ar mode
+    }
+
+    public void LoadDebug()
+    {
+        buttonLoadAR.SetActive(false);
+        buttonLoadDebug.SetActive(false);
+        buttonLoad2D.SetActive(true);
+        //compass1 = GameObject.Find("navArrow");
+        compass1.SetActive(false);
+        background.SetActive(true);
+        howToHoldYourPhone.text = "Debug Mode";
+        howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
+        closeToTheTarget.text = "";
+
+        ar_script.disableAR();  //lev disabling ar mode
+    }
+
+    void setErrorRadius()
+    {
+        float total_err_walking_plane = GPS.Instance.horizontal_accuracy + remote_horizontal_acc; //assumption: humans dont fly up
+        float max_limit_gps_err = 10; //lev var to limit capsule size
+        if (total_err_walking_plane > 0)
+        {
+            if(total_err_walking_plane > max_limit_gps_err)
+            {
+                ar_script.err_radius_vec = new Vector3(2f * max_limit_gps_err, 1f, 1.2f); // take max error for horizontal plane
+            }            
+            else
+            {
+                ar_script.err_radius_vec = new Vector3(2f * total_err_walking_plane, 1f, 1.2f); // take max error for horizontal plane
+            }
+        }        
     }
 }

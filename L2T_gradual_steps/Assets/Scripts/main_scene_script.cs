@@ -33,11 +33,14 @@ public class main_scene_script : MonoBehaviourPunCallbacks
     [Space(5)]
     public Text playerStatus;
     public Text connectionStatus;
+    public Text enterDetails;
 
     [Space(5)]
     public GameObject roomJoinUI;
     public GameObject buttonLoadArena;
     public GameObject buttonJoinRoom;
+    //public GameObject buttonEnterDetails;
+    public GameObject appImage;
 
     string playerName = "";
     string roomName = "";
@@ -92,6 +95,7 @@ public class main_scene_script : MonoBehaviourPunCallbacks
     // Tutorial Methods
     void ConnectToPhoton()
     {
+        appImage.SetActive(true);
         connectionStatus.text = "Connecting...";
         PhotonNetwork.GameVersion = gameVersion; //1
         PhotonNetwork.ConnectUsingSettings(); //2
@@ -121,7 +125,7 @@ public class main_scene_script : MonoBehaviourPunCallbacks
         }
         else
         {
-            playerStatus.text = "Minimum 2 Players required to Load Arena!";
+            playerStatus.text = "Minimum 2 Players\nrequired to start!";
         }
     }
 
@@ -134,7 +138,10 @@ public class main_scene_script : MonoBehaviourPunCallbacks
         // 1
         base.OnConnected();
         // 2
-        connectionStatus.text = "Connected to Photon!";
+        appImage.SetActive(false);
+        enterDetails.text = "Please enter your details";
+        enterDetails.color = new Color32(253, 141, 14, 255);
+        connectionStatus.text = "";
         connectionStatus.color = Color.green;
         roomJoinUI.SetActive(true);
         buttonLoadArena.SetActive(false);
@@ -155,11 +162,14 @@ public class main_scene_script : MonoBehaviourPunCallbacks
         {
             buttonLoadArena.SetActive(true);
             buttonJoinRoom.SetActive(false);
-            playerStatus.text = "You are Lobby Leader";
+            playerStatus.text = "You are the TARGET\n waiting for second player to join";
+            enterDetails.color = Color.clear;
         }
         else
         {
-            playerStatus.text = "Connected to Lobby";
+            buttonJoinRoom.SetActive(false);
+            playerStatus.text = "You are the LASER\n waiting for second player to start";
+            enterDetails.color = Color.clear;
         }
     }
 
