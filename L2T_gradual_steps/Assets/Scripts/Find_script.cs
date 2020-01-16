@@ -21,7 +21,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     private float remote_horizontal_acc;
     private float remote_vertical_acc;
 
-
+    private int maxValidARDist = 65;
 
     [Space(5)]  //space between vars in the editor of Unity
     public Text my_count_text;
@@ -33,6 +33,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     public GameObject buttonLoad2D;
     public GameObject buttonLoadDebug;
     public GameObject background;
+    //added by maya
+    public GameObject targetsScreen;
     public static GameObject compass1;
 
     public Text closeToTheTarget;
@@ -55,6 +57,9 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     //lev get access to functions from other script 
     public AugmentedScript ar_script;
+
+    //maya get access to GPS data from other script 
+    public Update_GPS_text gpsData;
 
     // Start is called before the first frame update
     void Start()
@@ -89,32 +94,89 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             return;
         }
 
-        buttonLoadAR.SetActive(true);
-        buttonLoadDebug.SetActive(true);
-        buttonLoad2D.SetActive(false);
-        background.SetActive(true);
         compass1 = GameObject.Find("navArrow");
-        howToHoldYourPhone.text = "Make sure your phone is HORIZONTAL";
-        howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
+        
+        //added by maya
+        //if you are the target
+        if (PhotonNetwork.IsMasterClient == true)
+        {
+            buttonLoadAR.SetActive(false);
+            buttonLoadDebug.SetActive(false);
+            buttonLoad2D.SetActive(false);
+            targetsScreen.SetActive(true);
+            background.SetActive(false);
+            howToHoldYourPhone.gameObject.SetActive(false);
 
+            remote_lat_text.color = Color.clear;
+            remote_longi_text.color = Color.clear;
+            remote_alt_text.color = Color.clear;
+            remote_horizontal_acc_text.color = Color.clear;
+            remote_vertical_acc_text.color = Color.clear;
+
+            gpsData.latitude_text.gameObject.SetActive(false);
+            gpsData.alt_text.gameObject.SetActive(false);
+            gpsData.longitude_text.gameObject.SetActive(false);
+            gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
+            gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+
+            compass1.SetActive(false);
+
+            closeToTheTarget.text = "\nthe LASER is\n looking for you\n\n wait...\n it won't take long";
+            closeToTheTarget.color = Color.magenta;
+            distance_to_target_text.gameObject.SetActive(false);
+        }
+
+        else
+        {
+            buttonLoadAR.SetActive(true);
+            buttonLoadDebug.SetActive(true);
+            buttonLoad2D.SetActive(false);
+            background.SetActive(true);
+            howToHoldYourPhone.gameObject.SetActive(true);
+            howToHoldYourPhone.text = "Make sure your phone is HORIZONTAL";
+            howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
+
+            //added by maya
+            remote_lat_text.color = Color.clear;
+            remote_longi_text.color = Color.clear;
+            remote_alt_text.color = Color.clear;
+            remote_horizontal_acc_text.color = Color.clear;
+            remote_vertical_acc_text.color = Color.clear;
+
+            gpsData.latitude_text.gameObject.SetActive(false);
+            gpsData.alt_text.gameObject.SetActive(false);
+            gpsData.longitude_text.gameObject.SetActive(false);
+            gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
+            gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+
+            targetsScreen.SetActive(false);
+            
+        }
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        SetMyCountText();
-        SetRemoteCountText();
+        if (PhotonNetwork.IsMasterClient == false)
+        {
+            SetMyCountText();
+            SetRemoteCountText();
 
-        SetRemoteLatText();
-        SetRemoteLongiText();
-        SetRemoteAltText();
+            SetRemoteLatText();
+            SetRemoteLongiText();
+            SetRemoteAltText();
 
-        SetRemoteHorizonAccText();
-        SetRemoteVerticalAccText();
+            SetRemoteHorizonAccText();
+            SetRemoteVerticalAccText();
 
-        setDistanceText();
-        setErrorRadius();
+            setDistanceText();
+            setErrorRadius();
+        }
+
+        
+
+        //changeTargetScreen();
     }
 
     public void OnAddToMyCount()
@@ -134,7 +196,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     void SetRemoteCountText()
     {
-        remote_count_text.text = "remote_count: " + remote_count.ToString();
+        remote_count_text.text = "remotecount: " + remote_count.ToString();
         if (FindDebugMode == FindDebug.All)
         {
             Debug.Log("SetRemoteCountText: remote_count_text= " + remote_count_text.text);
@@ -143,7 +205,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     void SetRemoteLatText()
     {
-        remote_lat_text.text = "remote_Lat: " + remote_lat.ToString();
+        remote_lat_text.text = "remote Lat: " + remote_lat.ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -153,7 +215,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     void SetRemoteLongiText()
     {
-        remote_longi_text.text = "remote_longi: " + remote_longi.ToString();
+        remote_longi_text.text = "remote longi: " + remote_longi.ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -163,7 +225,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     void SetRemoteAltText()
     {
-        remote_alt_text.text = "remote_alt: " + remote_alt.ToString();
+        remote_alt_text.text = "remote alt: " + remote_alt.ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -173,7 +235,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     void SetRemoteHorizonAccText()
     {
-        remote_horizontal_acc_text.text = " Remote Horizontal accuracy: " + remote_horizontal_acc.ToString();
+        remote_horizontal_acc_text.text = "remote Horizontal acc: " + remote_horizontal_acc.ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -183,7 +245,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     void SetRemoteVerticalAccText()
     {
-        remote_vertical_acc_text.text = " Remote Vertical accuracy: " + remote_vertical_acc.ToString();
+        remote_vertical_acc_text.text = "remote Vertical acc: " + remote_vertical_acc.ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -390,26 +452,48 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             //ar_script.updatedPosition.x = 0f;
             //ar_script.updatedPosition.y = -5f;
             ar_script.updatedPosition = new Vector3(0, -5f, distance_to_target);
-        }   
+        }
 
-        distance_to_target_text.text = "Distance to target:\n" + distance_to_target.ToString();
-        distance_to_target_text.color = new Color32(255, 227, 197, 255);
-
-        // We want it only on one phone. posible?????
         if (PhotonNetwork.IsMasterClient == false)
         {
-            if (distance_to_target < 10.0)
+            distance_to_target_text.text = "Distance to Target:\n" + distance_to_target.ToString();
+            distance_to_target_text.color = new Color32(255, 227, 197, 255);
+        }
+        
+        //else
+        //{
+            //distance_to_target_text.text = "Distance from Laser:\n" + distance_to_target.ToString();
+           // distance_to_target_text.color = new Color32(255, 227, 197, 255);
+        //}
+
+        // We want it only on one phone. posible?????
+        //if you are the laser, not the target
+        if (PhotonNetwork.IsMasterClient == false)
+        {
+            if (distance_to_target < maxValidARDist)
             {
-                closeToTheTarget.text = "You are very close to your TARGET";
+                closeToTheTarget.text = "You are very close to your TARGET\n switch to AR mode";
                 closeToTheTarget.color = Color.magenta;
-                
+                //howToHoldYourPhone.gameObject.SetActive(false);
+
+
             } else
             {
                 closeToTheTarget.text = "";
+                //howToHoldYourPhone.gameObject.SetActive(true);
             }
         } else
-        {
-            closeToTheTarget.text = "";
+        { // you are target
+            if (distance_to_target < maxValidARDist)
+            {
+                closeToTheTarget.text = "\n \nthe Laser is very close to you \n \nyou can wave to him!";
+                closeToTheTarget.color = Color.magenta;
+            }
+            else
+            {
+                closeToTheTarget.text = "\nthe LASER is\n looking for you\n\n wait...\n it won't take long";
+                closeToTheTarget.color = Color.magenta;
+            }
         }
             
     }
@@ -426,12 +510,28 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         buttonLoad2D.SetActive(true);
         background.SetActive(false);
         compass1.SetActive(false);
+        howToHoldYourPhone.gameObject.SetActive(true);
         howToHoldYourPhone.text = "Make sure your phone is VERTICAL";
         howToHoldYourPhone.color = new Color32(245,109, 14, 255);
         //VuforiaRuntime.Instance.InitVuforia(); // This is how you turn vuforia on!
-        closeToTheTarget.text = "";
+        //closeToTheTarget.text = "";
+        closeToTheTarget.gameObject.SetActive(false);
 
         ar_script.enableAR(); //lev enabling ar mode
+
+        //added by maya
+        remote_lat_text.color = Color.clear;
+        remote_longi_text.color = Color.clear;
+        remote_alt_text.color = Color.clear;
+        remote_horizontal_acc_text.color = Color.clear;
+        remote_vertical_acc_text.color = Color.clear;
+        gpsData.latitude_text.gameObject.SetActive(false);
+        gpsData.alt_text.gameObject.SetActive(false);
+        gpsData.longitude_text.gameObject.SetActive(false);
+        gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
+        gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+
+
     }
 
     public void Load2D()
@@ -442,10 +542,25 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         //compass1 = GameObject.Find("navArrow");
         compass1.SetActive(true);
         background.SetActive(true);
+        howToHoldYourPhone.gameObject.SetActive(true);
         howToHoldYourPhone.text = "Make sure your phone is HORIZONTAL";
         howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
 
         ar_script.disableAR();  //lev disabling ar mode
+
+        //added by maya
+        remote_lat_text.color = Color.clear;
+        remote_longi_text.color = Color.clear;
+        remote_alt_text.color = Color.clear;
+        remote_horizontal_acc_text.color = Color.clear;
+        remote_vertical_acc_text.color = Color.clear;
+        gpsData.latitude_text.gameObject.SetActive(false);
+        gpsData.alt_text.gameObject.SetActive(false);
+        gpsData.longitude_text.gameObject.SetActive(false);
+        gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
+        gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+
+        closeToTheTarget.gameObject.SetActive(true);
     }
 
     public void LoadDebug()
@@ -456,11 +571,24 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         //compass1 = GameObject.Find("navArrow");
         compass1.SetActive(false);
         background.SetActive(true);
+        howToHoldYourPhone.gameObject.SetActive(true);
         howToHoldYourPhone.text = "Debug Mode";
         howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
-        closeToTheTarget.text = "";
+        closeToTheTarget.gameObject.SetActive(false);
 
         ar_script.disableAR();  //lev disabling ar mode
+
+        //added by maya
+        remote_lat_text.color = Color.white;
+        remote_longi_text.color = Color.white;
+        remote_alt_text.color = Color.white;
+        remote_horizontal_acc_text.color = Color.white;
+        remote_vertical_acc_text.color = Color.white;
+        gpsData.latitude_text.gameObject.SetActive(true);
+        gpsData.alt_text.gameObject.SetActive(true);
+        gpsData.longitude_text.gameObject.SetActive(true);
+        gpsData.horizontal_accuracy_text.gameObject.SetActive(true);
+        gpsData.vertical_accuracy_text.gameObject.SetActive(true);
     }
 
     void setErrorRadius()
