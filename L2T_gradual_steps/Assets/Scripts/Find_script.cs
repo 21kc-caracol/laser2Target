@@ -51,12 +51,13 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     public Text distance_to_target_text;
 
     //debug 
-    enum FindDebug { None, All, GPS, Photon };  //declare new type
+    enum FindDebug { None, All, GPS, Photon, Pit };  //declare new type
     FindDebug FindDebugMode;  // declare a var from enum GpsDebug type
 
 
     //lev get access to functions from other script 
     public AugmentedScript ar_script;
+
 
     //maya get access to GPS data from other script 
     public Update_GPS_text gpsData;
@@ -66,7 +67,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     {
         //lev initializations
         //variables
-        FindDebugMode = FindDebug.None; // FindDebug.GPS;
+        FindDebugMode = FindDebug.Pit; // FindDebug.GPS;
         my_count = 0;
         remote_count = 0;
 
@@ -445,13 +446,24 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     {
         float distance_to_target = Calculate_Distance_Meters(GPS.Instance.longitude, GPS.Instance.latitude, remote_longi, remote_lat);
         // float distance_to_target = Calculate_Distance_Meters(35.044251f, 32.772542f, 35.044542f, 32.772231f);  //worked! it is 44 meters
+        
+        //checking pitagoras
+        float pitagorasDist = CalcPitagorasDist_Meters(GPS.Instance.longitude, GPS.Instance.latitude, remote_longi, remote_lat);
+        //checking pitagoras
+        if (FindDebugMode == FindDebug.Pit)
+        {
+            Debug.Log("pitagorasDist= " + pitagorasDist.ToString() + "def= " + distance_to_target.ToString() + "Delta= " + (pitagorasDist - distance_to_target).ToString());
+        }
 
         if (ar_script.ar_mode == true)
         {
             //ar_script.updatedPosition.z = distance_to_target;  //update Z value for the AR script
             //ar_script.updatedPosition.x = 0f;
             //ar_script.updatedPosition.y = -5f;
-            ar_script.updatedPosition = new Vector3(0, -5f, distance_to_target);
+            float y_plane_val = Y_plane_correction(distance_to_target);
+            ar_script.updatedPosition = new Vector3(0, y_plane_val, distance_to_target);
+
+
         }
 
         if (PhotonNetwork.IsMasterClient == false)
@@ -606,5 +618,21 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
                 ar_script.err_radius_vec = new Vector3(2f * total_err_walking_plane, 1f, 1.2f); // take max error for horizontal plane
             }
         }        
+    }
+
+    float Y_plane_correction(float distance_to_target)
+    {
+        const float REQ_RATIO = 13;
+        float y_value= (distance_to_target / REQ_RATIO) * (-1); //-1 for correction downwards
+        return y_value;
+    }
+
+    float CalcPitagorasDist_Meters(float long_a, float lat_a, float long_b, float lat_b)
+    {
+        float DeltaLong = Mathf.Abs(long_a - long_b);
+        float DeltaLat = Mathf.Abs(lat_a - lat_b);
+        float dist = Mathf.Sqrt( Mathf.Pow(DeltaLong, 2) + Mathf.Pow(DeltaLat, 2));
+
+        return dist * 100000; //for meters
     }
 }

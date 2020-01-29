@@ -33,7 +33,7 @@ public class GPS : MonoBehaviour
 
         //initialization
         gpsUpdateRate = 0.1f;
-        gpsDesiredAccuracy = 5;
+        gpsDesiredAccuracy = 1;
 
         latitude = 0;
         longitude = 0;

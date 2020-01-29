@@ -26,7 +26,7 @@ public class AugmentedScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        ArDebugMode = ArDebug.All; // FindDebug.GPS;
+        ArDebugMode = ArDebug.None; // FindDebug.GPS;
 
         ar_mode = false; //default is without AR
 
@@ -45,14 +45,16 @@ public class AugmentedScript : MonoBehaviour
         if (ar_mode == true)
         {
             //update position 
-            float minUpdateDelta = 2f;
+            float minUpdateDelta = 0.9f;
             float zDifference = Mathf.Abs(transform.localPosition.z - updatedPosition.z);
             float eDifference = Mathf.Abs(transform.localScale.x - err_radius_vec.x);
 
             if (zDifference > minUpdateDelta)
             {
                 transform.localPosition = updatedPosition; //Vector3.Lerp(transform.position, updatedPosition, speed); // z is updated from Find script //make less assignments- do it only on delta difference
-            }            
+            }
+
+
             transform.localEulerAngles += new Vector3(0, 1f, 0); // circular movement
 
             if (eDifference > minUpdateDelta)
