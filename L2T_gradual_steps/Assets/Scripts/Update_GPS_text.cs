@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,12 +14,12 @@ public class Update_GPS_text : MonoBehaviour
 
 
     void Update()
-    {
-        latitude_text.text = "my Lat= " + GPS.Instance.latitude.ToString();
-        longitude_text.text = "my Longi= " + GPS.Instance.longitude.ToString();
-        alt_text.text = "my Alt= " + GPS.Instance.altitude.ToString();
-        horizontal_accuracy_text.text = "my Horizon acc= " + GPS.Instance.horizontal_accuracy.ToString();
-        vertical_accuracy_text.text = "my Vertical acc= " + GPS.Instance.vertical_accuracy.ToString();
+    {       
+        latitude_text.text = "my Lat: " + GPS.Instance.latitude.ToString();
+        longitude_text.text = "my Longi: " + GPS.Instance.longitude.ToString();
+        alt_text.text = "my Alt: " + GPS.Instance.altitude.ToString();
+        horizontal_accuracy_text.text = "my Horizon acc: " + (String.Format("{0:0.00}", GPS.Instance.horizontal_accuracy)).ToString();
+        vertical_accuracy_text.text = "my Vertical acc: " + (String.Format("{0:0.00}", GPS.Instance.vertical_accuracy)).ToString();
     }
 
 

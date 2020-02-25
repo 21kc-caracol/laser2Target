@@ -49,9 +49,10 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     public Text remote_vertical_acc_text;
     //gps calculations text
     public Text distance_to_target_text;
+    public Text Azimuth_to_target_text;
 
     //debug 
-    enum FindDebug { None, All, GPS, Photon, Pit };  //declare new type
+    enum FindDebug { None, All, GPS, Photon, Pit, AZIMUTH };  //declare new type
     FindDebug FindDebugMode;  // declare a var from enum GpsDebug type
 
 
@@ -62,12 +63,15 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     //maya get access to GPS data from other script 
     public Update_GPS_text gpsData;
 
+    //lev get access to Azimuth from other script 
+    public compassRotation compRot_script;
+
     // Start is called before the first frame update
     void Start()
     {
         //lev initializations
         //variables
-        FindDebugMode = FindDebug.Pit; // FindDebug.GPS;
+        FindDebugMode = FindDebug.AZIMUTH;  // Pit; // FindDebug.GPS;
         my_count = 0;
         remote_count = 0;
 
@@ -125,6 +129,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             closeToTheTarget.text = "\nthe LASER is\n looking for you\n\n wait...\n it won't take long";
             closeToTheTarget.color = Color.magenta;
             distance_to_target_text.gameObject.SetActive(false);
+            Azimuth_to_target_text.gameObject.SetActive(false);
         }
 
         else
@@ -149,6 +154,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             gpsData.longitude_text.gameObject.SetActive(false);
             gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
             gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+            Azimuth_to_target_text.gameObject.SetActive(false);
 
             targetsScreen.SetActive(false);
             
@@ -172,6 +178,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             SetRemoteVerticalAccText();
 
             setDistanceText();
+            setAzimuthText();
             setErrorRadius();
         }
 
@@ -235,8 +242,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     }
 
     void SetRemoteHorizonAccText()
-    {
-        remote_horizontal_acc_text.text = "remote Horizontal acc: " + remote_horizontal_acc.ToString();
+    {       
+        remote_horizontal_acc_text.text = "remote Horizontal acc: " + (String.Format("{0:0.00}", remote_horizontal_acc)).ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -245,8 +252,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     }
 
     void SetRemoteVerticalAccText()
-    {
-        remote_vertical_acc_text.text = "remote Vertical acc: " + remote_vertical_acc.ToString();
+    {        
+        remote_vertical_acc_text.text = "remote Vertical acc: " + (String.Format("{0:0.00}", remote_vertical_acc)).ToString();
 
         if (FindDebugMode == FindDebug.GPS || FindDebugMode == FindDebug.All)
         {
@@ -382,6 +389,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     }
 
 
+
     //find distance
 
     float DegToRad(float deg)
@@ -420,7 +428,11 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     private float Calculate_Distance_Meters(float long_a, float lat_a, float long_b, float lat_b)
     {
-        if(FindDebugMode == FindDebug.All || FindDebugMode == FindDebug.GPS)
+        //lev debbug pinned location- use it to pin down the remote location
+        //long_b = 35.040394f;
+        //lat_b = 32.772929f;
+        //lev end debbug
+        if (FindDebugMode == FindDebug.All || FindDebugMode == FindDebug.GPS)
         {
             //todo - the target sees strange values because it doesnt receive any data so it shouldnt display any distance
             Debug.Log("Calculate_Distance_Meters: long_a= " + long_a.ToString());
@@ -438,10 +450,18 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         dist_y = Distance_y(a_lat_r, p_lat_r);
         total_dist = Final_distance(dist_x, dist_y) * 1000; //divide by 1000 to get meters
 
+        if (FindDebugMode == FindDebug.All || FindDebugMode == FindDebug.GPS)
+        {        
+            Debug.Log("total_dist= " + total_dist.ToString());
+        }
+
+
         return total_dist;
 
     }
 
+
+    //set distance and azimuth text
     private void setDistanceText()
     {
         float distance_to_target = Calculate_Distance_Meters(GPS.Instance.longitude, GPS.Instance.latitude, remote_longi, remote_lat);
@@ -467,8 +487,8 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         }
 
         if (PhotonNetwork.IsMasterClient == false)
-        {
-            distance_to_target_text.text = "Distance to Target:\n" + distance_to_target.ToString();
+        {           
+            distance_to_target_text.text = "Distance to Target:\n" + (String.Format("{0:0.00}", distance_to_target)).ToString();
             distance_to_target_text.color = new Color32(255, 227, 197, 255);
         }
         
@@ -510,6 +530,18 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
             
     }
 
+    private void setAzimuthText()
+    {
+        
+        Azimuth_to_target_text.text = "Azimuth: " + (String.Format("{0:0.00}", compRot_script.azimuth)).ToString();
+        //Azimuth_to_target_text.text = "Azimuth: " + compRot_script.azimuth.ToString();
+        Azimuth_to_target_text.color = new Color32(255, 227, 197, 255);
+        if (FindDebugMode == FindDebug.AZIMUTH)
+        {        
+            Debug.Log("azimuth (Find_S)= " + compRot_script.azimuth.ToString());
+        }
+    }
+
     private void sleepfor()
     {
         throw new NotImplementedException();
@@ -542,6 +574,9 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         gpsData.longitude_text.gameObject.SetActive(false);
         gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
         gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+        Azimuth_to_target_text.gameObject.SetActive(false);
+
+
 
 
     }
@@ -571,6 +606,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         gpsData.longitude_text.gameObject.SetActive(false);
         gpsData.horizontal_accuracy_text.gameObject.SetActive(false);
         gpsData.vertical_accuracy_text.gameObject.SetActive(false);
+        Azimuth_to_target_text.gameObject.SetActive(false);
 
         closeToTheTarget.gameObject.SetActive(true);
     }
@@ -601,6 +637,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         gpsData.longitude_text.gameObject.SetActive(true);
         gpsData.horizontal_accuracy_text.gameObject.SetActive(true);
         gpsData.vertical_accuracy_text.gameObject.SetActive(true);
+        Azimuth_to_target_text.gameObject.SetActive(true);
     }
 
     void setErrorRadius()
@@ -611,11 +648,11 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         {
             if(total_err_walking_plane > max_limit_gps_err)
             {
-                ar_script.err_radius_vec = new Vector3(2f * max_limit_gps_err, 1f, 1.2f); // take max error for horizontal plane
+                ar_script.err_radius_vec = new Vector3(2f * max_limit_gps_err, ar_script.err_radius_vec.y, ar_script.err_radius_vec.z); // take max error for horizontal plane
             }            
             else
             {
-                ar_script.err_radius_vec = new Vector3(2f * total_err_walking_plane, 1f, 1.2f); // take max error for horizontal plane
+                ar_script.err_radius_vec = new Vector3(2f * total_err_walking_plane, ar_script.err_radius_vec.y, ar_script.err_radius_vec.z); // take error for horizontal plane
             }
         }        
     }

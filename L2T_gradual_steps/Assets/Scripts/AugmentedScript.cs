@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class AugmentedScript : MonoBehaviour
 {
     private Vector3 defaultPosition;
+    private Vector3 defaultScale;
 
     //public- changed from Find script
     public Vector3 updatedPosition; 
@@ -18,20 +19,21 @@ public class AugmentedScript : MonoBehaviour
 
 
     //debug 
-    enum ArDebug { None, All, POS };  //declare new type
+    enum ArDebug { None, All};  //declare new type
     ArDebug ArDebugMode;  // declare a var from enum GpsDebug type
 
 
     // Start is called before the first frame update
     void Start()
     {
-        ArDebugMode = ArDebug.POS; // FindDebug.GPS;
+        ArDebugMode = ArDebug.All; // FindDebug.GPS;
 
         ar_mode = false; //default is without AR
 
         defaultPosition = transform.localPosition; //lev check bugs. new Vector3(0, -5f, 0); ; //initial capsule position- below the cam, for 65 meters its good enough
         Debug.Log("capsule defaultPosition= " + defaultPosition.ToString());
         err_radius_vec = transform.localScale; //later update error radius
+        defaultScale = transform.localScale; //different for different objects
         Debug.Log("capsule err_radius_vec= " + err_radius_vec.ToString());
 
         updatedPosition = defaultPosition;
@@ -60,7 +62,7 @@ public class AugmentedScript : MonoBehaviour
                 transform.localScale = err_radius_vec; // update error radius
             }
 
-            if (ArDebugMode == ArDebug.All || ArDebugMode == ArDebug.POS)
+            if (ArDebugMode == ArDebug.All)
             {
                 Debug.Log("AR current- trans.pos= " + transform.localPosition.ToString());
                 Debug.Log("AR desired- updatedPosition= " + updatedPosition.ToString());
@@ -89,7 +91,7 @@ public class AugmentedScript : MonoBehaviour
         ar_mode = false;
         transform.localPosition = defaultPosition; // Vector3.Lerp(transform.position, defaultPosition, speed);
         transform.localEulerAngles = new Vector3(0, 0, 0);
-        transform.localScale = new Vector3(1f, 1f, 1f); 
+        transform.localScale = defaultScale; // diff for evert 3d obj. new Vector3(3.09f,5.04f,1);//(1f, 1f, 1f); 
         if (ArDebugMode == ArDebug.All)
         {
             Debug.Log("disable trans.pos= " + transform.localPosition.ToString());

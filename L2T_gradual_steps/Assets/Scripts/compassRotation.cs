@@ -7,22 +7,24 @@ public class compassRotation : MonoBehaviour
 {
 
     private GameObject compass; // will be used to store a graphical arrow.
-    private float bearing; // directio using only 2 GPS coordinates, regardless of phones heading
+    private float bearing; // directio using only 2 GPS coordinates, regardless of phones heading //not using this var
     public Text bearingText; //debug
     Quaternion attitude; //will store the attitude from our gyroscope (related to phones heading)
 
     //debug
     private float bearing_z; //rotate counter-clock. 0 degrees is TrueNorth
+    public float azimuth; //== bearing_Z. this is for the other scripts. i don't want to expose bearing z.
 
 
     //debug 
-    enum CompassDebug { None, All, Find_x_rotation };  //declare new type
+    enum CompassDebug { None, All, Find_x_rotation,AZIMUTH };  //declare new type
     CompassDebug CompassDebugMode;  // declare a var from enum GpsDebug type
 
     // Start is called before the first frame update
     void Start()
     {
-        CompassDebugMode = CompassDebug.None;
+        CompassDebugMode = CompassDebug.AZIMUTH;
+        azimuth = 0;
 
         compass = GameObject.Find("navArrow"); //store game object        
 
@@ -37,7 +39,8 @@ public class compassRotation : MonoBehaviour
         //take only z axis bearing
         //bearing_z = angleFromCoordinate(32.7721325f, 35.0441824f, 32.7725536f, 35.043838f); // faith garden parallel road
 
-        bearing_z = angleFromCoordinate(GPS.Instance.latitude, GPS.Instance.longitude, Find_script.remote_lat, Find_script.remote_longi); // faith garden parallel road
+        bearing_z = angleFromCoordinate(GPS.Instance.latitude, GPS.Instance.longitude, Find_script.remote_lat, Find_script.remote_longi); 
+        azimuth = bearing_z;
 
         if (CompassDebugMode == CompassDebug.All)
         {
@@ -57,6 +60,11 @@ public class compassRotation : MonoBehaviour
         //   Debug.Log("comp rot Y = " + compass.transform.rotation.eulerAngles.y.ToString());
         //    Debug.Log("comp rot Z = " + compass.transform.rotation.eulerAngles.z.ToString());
         //}
+        if (CompassDebugMode == CompassDebug.AZIMUTH)
+        {
+            Debug.Log("azimuth= " + azimuth.ToString());
+        }
+
 
         compass.transform.rotation = Quaternion.Slerp(compass.transform.rotation, Quaternion.Euler(0f,0f, bearing_z+ Input.compass.trueHeading), 1f);
 
