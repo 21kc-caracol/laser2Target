@@ -7,7 +7,6 @@ public class AugmentedScript : MonoBehaviour
 {
     private Vector3 defaultPosition;
 
-
     //public- changed from Find script
     public Vector3 updatedPosition; 
     public Vector3 err_radius_vec;
@@ -19,14 +18,14 @@ public class AugmentedScript : MonoBehaviour
 
 
     //debug 
-    enum ArDebug { None, All };  //declare new type
+    enum ArDebug { None, All, POS };  //declare new type
     ArDebug ArDebugMode;  // declare a var from enum GpsDebug type
 
 
     // Start is called before the first frame update
     void Start()
     {
-        ArDebugMode = ArDebug.None; // FindDebug.GPS;
+        ArDebugMode = ArDebug.POS; // FindDebug.GPS;
 
         ar_mode = false; //default is without AR
 
@@ -53,8 +52,7 @@ public class AugmentedScript : MonoBehaviour
             {
                 transform.localPosition = updatedPosition; //Vector3.Lerp(transform.position, updatedPosition, speed); // z is updated from Find script //make less assignments- do it only on delta difference
             }
-
-
+            
             transform.localEulerAngles += new Vector3(0, 1f, 0); // circular movement
 
             if (eDifference > minUpdateDelta)
@@ -62,7 +60,7 @@ public class AugmentedScript : MonoBehaviour
                 transform.localScale = err_radius_vec; // update error radius
             }
 
-            if (ArDebugMode == ArDebug.All)
+            if (ArDebugMode == ArDebug.All || ArDebugMode == ArDebug.POS)
             {
                 Debug.Log("AR current- trans.pos= " + transform.localPosition.ToString());
                 Debug.Log("AR desired- updatedPosition= " + updatedPosition.ToString());

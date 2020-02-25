@@ -584,7 +584,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         compass1.SetActive(false);
         background.SetActive(true);
         howToHoldYourPhone.gameObject.SetActive(true);
-        howToHoldYourPhone.text = "Debug Mode";
+        howToHoldYourPhone.text = "Data Mode";
         howToHoldYourPhone.color = new Color32(245, 109, 14, 255);
         closeToTheTarget.gameObject.SetActive(false);
 
