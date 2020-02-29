@@ -23,7 +23,7 @@ public class compassRotation : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        CompassDebugMode = CompassDebug.AZIMUTH;
+        CompassDebugMode = CompassDebug.None;
         azimuth = 0;
 
         compass = GameObject.Find("navArrow"); //store game object        

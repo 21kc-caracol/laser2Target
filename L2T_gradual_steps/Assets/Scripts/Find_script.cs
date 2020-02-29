@@ -71,7 +71,7 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
     {
         //lev initializations
         //variables
-        FindDebugMode = FindDebug.AZIMUTH;  // Pit; // FindDebug.GPS;
+        FindDebugMode = FindDebug.Pit;// AZIMUTH;  // Pit; // FindDebug.GPS;
         my_count = 0;
         remote_count = 0;
 
@@ -472,7 +472,20 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
         //checking pitagoras
         if (FindDebugMode == FindDebug.Pit)
         {
-            Debug.Log("pitagorasDist= " + pitagorasDist.ToString() + "def= " + distance_to_target.ToString() + "Delta= " + (pitagorasDist - distance_to_target).ToString());
+            Debug.Log("Pit_dist= " + pitagorasDist.ToString() + " dflt_dist= " + distance_to_target.ToString() + " Dlta= " + (Math.Abs(pitagorasDist - distance_to_target)).ToString());
+
+            //CALC ALSO TG(ALPHA) AS A PLANE ANGLE. NOTE ITS ONLY INSIDE THE TRIANGLE, SO AS A SECOND STEP
+            //ILL NEED TO ADD CASES FOR THE ACTUAL AZIMUTH CALCULATION (4 CASES). NOT TODAY 29.2.2020
+            //for now i only made the same calc as the one in compRot script.
+            float dlta_long_x = Math.Abs(GPS.Instance.longitude - remote_longi);
+            float dlta_lat_y = Math.Abs(GPS.Instance.latitude - remote_lat);
+            //same logic as in compassRotation script
+            float pit_brng = Mathf.Atan2(dlta_lat_y, dlta_long_x);
+            pit_brng = Mathf.Rad2Deg * pit_brng;
+            pit_brng = (pit_brng + 360) % 360;
+            //pit_brng = 360 - pit_brng; //this makes it from actual bearing which is calculated clockwise to counter-clockwise
+            Debug.Log("Pit_angle= " + pit_brng.ToString()+ " dflt_ang= " + compRot_script.azimuth.ToString() + "Dlta_ang= " + (Math.Abs(pit_brng - compRot_script.azimuth)).ToString());
+
         }
 
         if (ar_script.ar_mode == true)
@@ -532,13 +545,15 @@ public class Find_script : Photon.Pun.MonoBehaviourPunCallbacks, Photon.Pun.IPun
 
     private void setAzimuthText()
     {
-        
-        Azimuth_to_target_text.text = "Azimuth: " + (String.Format("{0:0.00}", compRot_script.azimuth)).ToString();
+        float clockWise_Azimuth = 360 - compRot_script.azimuth; //at compassRot script the azimuth was calculated for 
+                                                                //the arrow Unity rotation (counter-clock), but here i want actual
+                                                                //real life azimuth which is clockWise. 
+        Azimuth_to_target_text.text = "Azimuth: " + (String.Format("{0:0.00}", clockWise_Azimuth)).ToString();
         //Azimuth_to_target_text.text = "Azimuth: " + compRot_script.azimuth.ToString();
         Azimuth_to_target_text.color = new Color32(255, 227, 197, 255);
         if (FindDebugMode == FindDebug.AZIMUTH)
         {        
-            Debug.Log("azimuth (Find_S)= " + compRot_script.azimuth.ToString());
+            Debug.Log("azimuth (Find_S)= " + clockWise_Azimuth);
         }
     }
 
